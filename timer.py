@@ -26,7 +26,7 @@ class Timer:
         return self
 
     def Stop(self) -> None:
-        """Stop the Timer"""
+        """Stop the Timer and display the elapsed time"""
 
         if not self.__start_time:
             raise RuntimeError(f"Timer '{self.__name}' has not started")

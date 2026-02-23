@@ -5,7 +5,6 @@ Nik Skouf (s5617804)
 """
 
 import random
-import time
 
 import numpy as np
 
