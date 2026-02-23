@@ -1,9 +1,11 @@
 from time import perf_counter
 from typing import Self
 
+from debug import DEBUG_ENABLED
+
 
 class Timer:
-    """Utility class used to time the duration of processes"""
+    """Utility class used to time the duration of processes while debugging"""
 
     def __init__(self, name: str) -> None:
         """Initiliaze Timer"""
@@ -23,6 +25,8 @@ class Timer:
 
         self.__start_time = perf_counter()
 
+        print(f"Process '{self.__name}' started")
+
         return self
 
     def Stop(self) -> None:
@@ -38,4 +42,5 @@ class Timer:
 
         elapsed_time = self.__stop_time - self.__start_time
 
-        print(f"Time elapsed during '{self.__name}': {elapsed_time:.2f}")
+        if DEBUG_ENABLED:
+            print(f"Time elapsed during '{self.__name}': {elapsed_time:.2f}")
