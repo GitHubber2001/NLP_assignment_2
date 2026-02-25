@@ -14,5 +14,5 @@ Assignment group 3
 
 # Console command to reproduce main results
 ```console
-python main.py
+uv run python main.py --debug=false
 ```
