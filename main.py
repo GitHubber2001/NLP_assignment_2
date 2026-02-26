@@ -7,6 +7,7 @@ Nik Skouf (s5617804)
 import random
 
 import numpy as np
+import torch
 
 import error_analysis
 import evaluation
@@ -17,6 +18,7 @@ from timer import Timer
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 random.seed(RANDOM_SEED)
+torch.manual_seed(RANDOM_SEED)
 
 
 def main() -> None:
