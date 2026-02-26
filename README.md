@@ -17,18 +17,18 @@ The training, evaluation metrics, and error analysis outputs given by the progra
 
 ## Windows
 ```console
-  $ git clone https://github.com/GitHubber2001/NLP_assignment_2
-  $ cd NLP_assignment_2
-  $ uv sync
-  $ source .venv/Scripts/activate
-  $ python main.py --debug=false
+git clone https://github.com/GitHubber2001/NLP_assignment_2
+cd NLP_assignment_2
+uv sync
+source .venv/Scripts/activate
+python main.py --debug=false
 ```
 
 ## Linux and macOS
 ```console
-  $ git clone https://github.com/GitHubber2001/NLP_assignment_2
-  $ cd NLP_assignment_2
-  $ uv sync
-  $ source .venv/bin/activate
-  $ python main.py --debug=false
+git clone https://github.com/GitHubber2001/NLP_assignment_2
+cd NLP_assignment_2
+uv sync
+source .venv/bin/activate
+python main.py --debug=false
 ```
