@@ -1,9 +1,13 @@
 import os
 import re
+from collections import Counter
 
 import pandas as pd
 from sklearn import model_selection
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+PADDING = "<padding>"
+UNKOWN = "<unkown>"
 
 
 def tokenize(text: str):
@@ -28,13 +32,22 @@ def preprocessing(random_seed: int):
     return (train_df, validation_df, test_df)
 
 
-def tfidf_generator(train_data, dev_data, test_data):
-    tfidf = TfidfVectorizer(tokenizer=tokenize, lowercase=False)
-    train_x = tfidf.fit_transform(train_data["text"])
-    dev_x = tfidf.transform(dev_data["text"])
-    test_x = tfidf.transform(test_data["text"])
-    train_y = train_data["label"].values
-    dev_y = dev_data["label"].values
-    test_y = test_data["label"].values
+def generate_vocab(data, minimum_word_occurance=2, maximum_length=20000):
+    counter = Counter()
+    for sentence in data:
+        counter.update(tokenize(sentence))
 
-    return (train_x, train_y, dev_x, dev_y, test_x, test_y)
+    vocab = {PADDING: 0, UNKOWN: 1}
+
+    for word, frequency in counter.most_common():
+        if frequency < minimum_word_occurance:
+            break
+        elif len(vocab) >= maximum_length:
+            break
+        else:
+            vocab[word] = len(vocab)
+    return vocab
+
+
+def convert_to_indices(tokens: list, dictionary: dict) -> list:
+    return [dictionary.get(token, dictionary[UNKOWN]) for token in tokens]
