@@ -17,7 +17,7 @@ class Timer:
         self._start_time = None
         self._stop_time = None
 
-    def Start(self) -> Self:
+    def start(self) -> Self:
         """Start the Timer"""
 
         if self._start_time:
@@ -29,7 +29,7 @@ class Timer:
 
         return self
 
-    def Stop(self) -> None:
+    def stop(self) -> None:
         """Stop the Timer and display the elapsed time"""
 
         if not self._start_time:
@@ -46,25 +46,28 @@ class Timer:
             print(f"Time elapsed during '{self._name}': {elapsed_time:.2f}")
 
     @staticmethod
-    def Time(name: str) -> Callable:
-        """Decorator that times the duration of a function"""
+    def time(name: str) -> Callable:
+        """Decorator factory used for timing the duration of a function"""
 
         if not isinstance(name, str):
             raise TypeError(f"Name argument must be a string ({name} was given)")
 
-        def TimeFunction(func: Callable):
+        def decorator(func: Callable):
             if not isinstance(func, Callable):
                 raise TypeError("parameter func must be of type Callable")
-    
-            start_time = perf_counter()
-            results = func()
-            end_time = perf_counter()
 
-            elapsed_time = end_time - start_time
+            def wrapper(*args, **kwargs):
+                start_time = perf_counter()
+                results = func(*args, **kwargs)
+                end_time = perf_counter()
 
-            if DEBUG_ENABLED:
-                print(f"Time elapsed during '{name}': {elapsed_time:.2f}")
+                elapsed_time = end_time - start_time
 
-            return results
+                if DEBUG_ENABLED:
+                    print(f"Time elapsed during '{name}': {elapsed_time:.2f}")
 
-        return TimeFunction
+                return results
+
+            return wrapper
+
+        return decorator

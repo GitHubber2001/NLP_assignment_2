@@ -21,17 +21,17 @@ random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
 
 
-@Timer.Time("Program")
+@Timer.time("Program")
 def main() -> None:
-    split_timer = Timer("Split").Start()
+    split_timer = Timer("Split").start()
     train_ds, dev_ds, test_ds = preprocessing.preprocessing(RANDOM_SEED)
-    split_timer.Stop()
+    split_timer.stop()
 
-    dict_timer = Timer("Dict").Start()
+    dict_timer = Timer("Dict").start()
     dictionary = preprocessing.generate_vocab(train_ds["text"], 2, 20000)
     print(len(dictionary))
     print(list(dictionary.items())[:20])
-    dict_timer.Stop()
+    dict_timer.stop()
 
 
 if __name__ == "__main__":
