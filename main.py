@@ -23,6 +23,7 @@ torch.manual_seed(RANDOM_SEED)
 
 @Timer.time("Program")
 def main() -> None:
+
     split_timer = Timer("Split").start()
     train_ds, dev_ds, test_ds = preprocessing.preprocessing(RANDOM_SEED)
     split_timer.stop()

@@ -1,10 +1,13 @@
 import os
 import re
 from collections import Counter
+from dataclasses import dataclass
 
 import pandas as pd
+import torch
 from sklearn import model_selection
 from sklearn.feature_extraction.text import TfidfVectorizer
+from torch.utils.data import DataLoader, Dataset
 
 PADDING = "<padding>"
 UNKOWN = "<unkown>"
@@ -51,3 +54,48 @@ def generate_vocab(data, minimum_word_occurance=2, maximum_length=20000):
 
 def convert_to_indices(tokens: list, dictionary: dict) -> list:
     return [dictionary.get(token, dictionary[UNKOWN]) for token in tokens]
+
+
+@dataclass
+class Batch:
+    data: torch.Tensor
+    labels: torch.Tensor
+    lengths: torch.Tensor
+
+
+class TextData(Dataset):
+    def __init__(
+        self, data: pd.DataFrame, dictionary: dict, max_item_length: int = 300
+    ) -> None:
+        self.data = data
+        self.dictionary = dictionary
+        self.max_len = max_item_length
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        datapoint = self.data[index]
+        tokens = tokenize(datapoint["text"])
+
+        return convert_to_indices(tokens, self.dictionary)[: self.max_len]
+
+    def collate_fn(self, batch: list[tuple[list[int], int]]) -> Batch:
+        id_list = []
+        label_list = []
+        length_list = []
+
+        for indices, label in batch:
+            id_list.append(indices)
+            label_list.append(label)
+            length_list.append(len(indices))
+
+        data = torch.full((len(batch), self.max_len), self.dictionary[PADDING])
+
+        for i, id in enumerate(id_list):
+            data[i, : len(id)] = torch.tensor(id)
+
+        label_list = torch.tensor(label_list)
+        length_list = torch.tensor(length_list)
+
+        return Batch(data, label_list, length_list)
