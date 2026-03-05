@@ -1,5 +1,5 @@
 from time import perf_counter
-from typing import Self
+from typing import Self, Callable
 
 from debug import DEBUG_ENABLED
 
@@ -44,3 +44,24 @@ class Timer:
 
         if DEBUG_ENABLED:
             print(f"Time elapsed during '{self.__name}': {elapsed_time:.2f}")
+
+    @staticmethod
+    def TimeFunction(name: str, func: Callable) -> None:
+        """Time the duration of a function"""
+
+        if not isinstance(name, str):
+            raise TypeError(f"Name argument must be a string ({name} was given)")
+    
+        if not isinstance(func, Callable):
+            raise TypeError("paramter func must be of type Callable")
+
+        start_time = perf_counter()
+        results = func()
+        end_time = perf_counter()
+
+        elapsed_time = end_time - start_time
+
+        if DEBUG_ENABLED:
+            print(f"Time elapsed during '{name}': {elapsed_time:.2f}")
+
+        return results

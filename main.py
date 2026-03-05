@@ -25,6 +25,8 @@ torch.manual_seed(RANDOM_SEED)
 def main() -> None:
     program_timer = Timer("Program").Start()
 
+    train_ds, dev_ds, test_ds = preprocessing.preprocessing(RANDOM_SEED)
+
     program_timer.Stop()
 
 
