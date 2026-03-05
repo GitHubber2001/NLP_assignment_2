@@ -24,7 +24,15 @@ torch.manual_seed(RANDOM_SEED)
 def main() -> None:
     program_timer = Timer("Program").Start()
 
+    split_timer = Timer("Split").Start()
     train_ds, dev_ds, test_ds = preprocessing.preprocessing(RANDOM_SEED)
+    split_timer.Stop()
+
+    dict_timer = Timer("Dict").Start()
+    dictionary = preprocessing.generate_vocab(train_ds["text"], 2, 20000)
+    print(len(dictionary))
+    print(list(dictionary.items())[:20])
+    dict_timer.Stop()
 
     program_timer.Stop()
 
