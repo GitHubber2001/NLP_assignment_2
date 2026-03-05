@@ -21,9 +21,8 @@ random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
 
 
+@Timer.Time("Program")
 def main() -> None:
-    program_timer = Timer("Program").Start()
-
     split_timer = Timer("Split").Start()
     train_ds, dev_ds, test_ds = preprocessing.preprocessing(RANDOM_SEED)
     split_timer.Stop()
@@ -33,8 +32,6 @@ def main() -> None:
     print(len(dictionary))
     print(list(dictionary.items())[:20])
     dict_timer.Stop()
-
-    program_timer.Stop()
 
 
 if __name__ == "__main__":

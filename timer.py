@@ -47,7 +47,7 @@ class Timer:
 
     @staticmethod
     def Time(name: str) -> Callable:
-        """Decorator that time the duration of a function"""
+        """Decorator that times the duration of a function"""
 
         if not isinstance(name, str):
             raise TypeError(f"Name argument must be a string ({name} was given)")
