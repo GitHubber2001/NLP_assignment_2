@@ -65,7 +65,7 @@ class Batch:
 
 class TextData(Dataset):
     def __init__(
-        self, data: pd.DataFrame, dictionary: dict, max_item_length: int = 300
+        self, data: pd.DataFrame, dictionary: dict, max_item_length: int = 100
     ) -> None:
         self.data = data
         self.dictionary = dictionary

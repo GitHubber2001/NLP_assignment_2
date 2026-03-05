@@ -6,6 +6,7 @@ Nik Skouf (s5617804)
 
 import random
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
@@ -29,10 +30,17 @@ def main() -> None:
     split_timer.stop()
 
     dict_timer = Timer("Dict").start()
-    dictionary = preprocessing.generate_vocab(train_ds["text"], 2, 20000)
+    dictionary = preprocessing.generate_vocab(train_ds["text"], 2, 50000)
     print(len(dictionary))
     print(list(dictionary.items())[:20])
     dict_timer.stop()
+
+    lengths = [len(preprocessing.tokenize(text)) for text in train_ds["text"]]
+    plt.hist(lengths, "auto")
+    plt.title("Distribution of tokenized text lengths in training set")
+    plt.xlabel("Length of tokenized text")
+    plt.ylabel("Frequency")
+    plt.show()
 
 
 if __name__ == "__main__":
