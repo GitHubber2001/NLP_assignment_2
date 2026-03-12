@@ -63,7 +63,7 @@ def main() -> None:
             test_ds, BATCH_SIZE, True, collate_fn=test_ds.collate_fn
         )
 
-    # plot of istribution of lengths tokens
+    # plot of distribution of lengths tokens
     lengths = [len(preprocessing.tokenize(text)) for text in train_df["text"]]
     plt.figure()
     plt.hist(lengths, "auto")

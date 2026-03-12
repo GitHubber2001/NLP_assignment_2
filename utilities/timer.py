@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
 from typing import Callable, Self
