@@ -1,17 +1,20 @@
 import torch
 from torch import nn
-from torch.utils.data import Dataloader
+from torch.utils.data import DataLoader
 
 
-def evaluate(model: nn.Module, data: Dataloader) -> float:
+def evaluate(model: nn.Module, data: DataLoader, device) -> float:
     model.eval()
     size = len(data.dataset)
 
     correct = 0
 
     with torch.no_grad():
-        for X, y in data:
-            prediction = model(X).argmax(1)
+        for batch in data:
+            x = batch.data.to(device)
+            lengths = batch.lengths.to(device)
+            y = batch.labels.to(device)
+            prediction = model(x).argmax(1)
             if prediction == y:
                 correct += 1
     return correct / size
@@ -19,8 +22,9 @@ def evaluate(model: nn.Module, data: Dataloader) -> float:
 
 def training(
     model: nn.Module,
-    training_data: Dataloader,
-    validation_data: Dataloader,
+    training_data: DataLoader,
+    validation_data: DataLoader,
+    device,
     learning_rate: float = 1e-3,
     max_epochs: int = 30,
     loss_function=nn.CrossEntropyLoss(),
@@ -37,8 +41,11 @@ def training(
         last_validation_accuracy = validation_accuracy
         total_loss = 0
         total_length = 0
-        for batch, (X, y) in enumerate(training_data):
-            prediction = model(X)
+        for batch in training_data:
+            x = batch.data.to(device)
+            lengths = batch.lengths.to(device)
+            y = batch.labels.to(device)
+            prediction = model(x)
             loss = loss_function(prediction, y)
 
             loss.backward()
@@ -50,7 +57,7 @@ def training(
 
         training_loss = total_loss / total_length
         training_loss_history.append(training_loss)
-        validation_accuracy = evaluate(model, validation_data)
+        validation_accuracy = evaluate(model, validation_data, device)
         validation_accuracy_history.append(validation_accuracy)
         if validation_accuracy - last_validation_accuracy < stopping_accuracy:
             break

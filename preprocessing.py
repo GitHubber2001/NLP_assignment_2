@@ -30,7 +30,9 @@ def preprocessing(random_seed: int):
     train_df, validation_df = model_selection.train_test_split(
         train_df, random_state=random_seed, test_size=0.1, train_size=0.9
     )
-
+    train_df["label"] -= 1
+    validation_df["label"] -= 1
+    test_df["label"] -= 1
     merge_colums([train_df, validation_df, test_df])
     return (train_df, validation_df, test_df)
 
@@ -75,10 +77,12 @@ class TextData(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        datapoint = self.data[index]
+        datapoint = self.data.iloc[index]
         tokens = tokenize(datapoint["text"])
 
-        return convert_to_indices(tokens, self.dictionary)[: self.max_len]
+        return convert_to_indices(tokens, self.dictionary)[
+            : self.max_len
+        ], datapoint["label"]
 
     def collate_fn(self, batch: list[tuple[list[int], int]]) -> Batch:
         id_list = []
