@@ -1,13 +1,16 @@
+import numpy as np
 import torch
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch import nn
 from torch.utils.data import DataLoader
 
 
-def evaluate(model: nn.Module, data: DataLoader, device) -> float:
+def evaluate(model: nn.Module, data: DataLoader, device):
     model.eval()
     size = len(data.dataset)
 
-    correct = 0
+    true = []
+    predictions = []
 
     with torch.no_grad():
         for batch in data:
@@ -15,9 +18,12 @@ def evaluate(model: nn.Module, data: DataLoader, device) -> float:
             lengths = batch.lengths.to(device)
             y = batch.labels.to(device)
             prediction = model(x).argmax(1)
-            if prediction == y:
-                correct += 1
-    return correct / size
+            true.append(y.cpu().numpy())
+            predictions.append(prediction.cpu().numpy())
+
+    total_true = np.concatenate(true)
+    total_prediction = np.concatenate(predictions)
+    return accuracy_score(total_true, total_prediction)
 
 
 def training(

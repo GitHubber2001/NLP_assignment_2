@@ -31,10 +31,9 @@ MAX_LENGTH = 100
 @Timer.time("Program")
 def main() -> None:
     device = (
-        #torch.accelerator.current_accelerator().type
-        #if torch.accelerator.is_available()
-        #else "cpu"
-        "cpu"
+        torch.accelerator.current_accelerator().type
+        if torch.accelerator.is_available()
+        else "cpu"
     )
     print(f"Using {device} device")
 
@@ -73,10 +72,13 @@ def main() -> None:
     plt.show()
 
     training_time = Timer("training").start()
-    cnn_model = models.CNN(len(dictionary)).to(device)
+    cnn_model = models.CNN(len(dictionary), 4).to(device)
     loss_history, accuracy_history = model_training.training(
         cnn_model, train_dataloader, dev_dataloader, device
     )
+    plt.plot(loss_history)
+    plt.plot(accuracy_history)
+    plt.show()
     training_time.stop()
 
 

@@ -11,10 +11,10 @@ class CNN(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_dim: int,
         num_classes: int,
+        embed_dim: int = 64,
         num_filters: int = 100,
-        kernel_sizes: tuple = (3, 4, 5),
+        kernel_sizes: tuple = (2, 3, 4, 5),
         dropout: float = 0.5,
     ):
         super().__init__()
