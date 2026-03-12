@@ -1,7 +1,9 @@
+from contextlib import contextmanager
+from functools import wraps
 from time import perf_counter
 from typing import Callable, Self
 
-from debug import DEBUG_ENABLED
+from utilities.debug import DEBUG_ENABLED
 
 
 class Timer:
@@ -56,6 +58,7 @@ class Timer:
             if not isinstance(func, Callable):
                 raise TypeError("parameter func must be of type Callable")
 
+            @wraps(func)
             def wrapper(*args, **kwargs):
                 start_time = perf_counter()
                 results = func(*args, **kwargs)
@@ -71,3 +74,33 @@ class Timer:
             return wrapper
 
         return decorator
+
+
+class TimeManager:
+    """Context Manager used for timing the duration of a procedure"""
+
+    def __init__(self, name: str) -> None:
+        if not isinstance(name, str):
+            raise TypeError(f"Name argument must be a string ({name} was given)")
+
+        self.name = name
+
+    def __enter__(self):
+        self._start_time = perf_counter()
+
+        print(f"Process '{self.name}' started")
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        end_time = perf_counter()
+        elapsed_time = end_time - self._start_time
+
+        if DEBUG_ENABLED:
+            if exc_type:
+                exc_message = f"with exception '{exc_type.__name__}: {exc_value}'"
+                print(
+                    f"Time elapsed during '{self.name}' {exc_message}: {elapsed_time:.2f}"
+                )
+            else:
+                print(f"Time elapsed during '{self.name}': {elapsed_time:.2f}")

@@ -5,7 +5,9 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 
-def evaluate(model: nn.Module, data: DataLoader, device):
+def evaluate(model: nn.Module, data: DataLoader, device: str):
+    """Returns an evaluation of the model based on the given data"""
+
     model.eval()
     size = len(data.dataset)
 
@@ -23,6 +25,7 @@ def evaluate(model: nn.Module, data: DataLoader, device):
 
     total_true = np.concatenate(true)
     total_prediction = np.concatenate(predictions)
+
     return accuracy_score(total_true, total_prediction)
 
 
@@ -37,16 +40,20 @@ def training(
     optimizer=torch.optim.Adam,
     stopping_accuracy: float = 1e-6,
 ) -> tuple[list[float], list[float]]:
+    """Trains a model and returns the training loss history
+    and validation accuracy history"""
+
     optimizer = optimizer(model.parameters(), lr=learning_rate)
     model.train()
     validation_accuracy = 0
     training_loss_history = []
     validation_accuracy_history = []
 
-    for epoch in range(max_epochs):
+    for _ in range(max_epochs):
         last_validation_accuracy = validation_accuracy
         total_loss = 0
         total_length = 0
+
         for batch in training_data:
             x = batch.data.to(device)
             lengths = batch.lengths.to(device)
@@ -65,6 +72,8 @@ def training(
         training_loss_history.append(training_loss)
         validation_accuracy = evaluate(model, validation_data, device)
         validation_accuracy_history.append(validation_accuracy)
+
         if validation_accuracy - last_validation_accuracy < stopping_accuracy:
             break
+
     return training_loss_history, validation_accuracy_history
