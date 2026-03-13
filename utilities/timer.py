@@ -78,11 +78,21 @@ class Timer:
 class TimeManager:
     """Context Manager used for timing the duration of a procedure"""
 
-    def __init__(self, name: str) -> None:
+    processes_info = []
+
+    def __init__(self, name: str, get_summary: bool | None = False) -> None:
         if not isinstance(name, str):
             raise TypeError(f"Name argument must be a string ({name} was given)")
 
+        if get_summary is None:
+            get_summary = True
+        elif not isinstance(get_summary, bool):
+            raise TypeError(
+                f"Get_summary argument must be a boolean or None ({name} was given)"
+            )
+
         self.name = name
+        self.get_summary = get_summary
 
     def __enter__(self):
         self._start_time = perf_counter()
@@ -95,11 +105,30 @@ class TimeManager:
         end_time = perf_counter()
         elapsed_time = end_time - self._start_time
 
-        if DEBUG_ENABLED:
-            if exc_type:
-                exc_message = f"with exception '{exc_type.__name__}: {exc_value}'"
-                print(
-                    f"Time elapsed during '{self.name}' {exc_message}: {elapsed_time:.2f}"
-                )
-            else:
-                print(f"Time elapsed during '{self.name}': {elapsed_time:.2f}")
+        TimeManager.processes_info.append([self.name, elapsed_time, exc_type])
+
+        if not DEBUG_ENABLED:
+            return
+
+        if exc_type:
+            exc_message = f"with exception '{exc_type.__name__}: {exc_value}'"
+            print(
+                f"Time elapsed during '{self.name}' {exc_message}: {elapsed_time:.2f}"
+            )
+        else:
+            print(f"Time elapsed during '{self.name}': {elapsed_time:.2f}")
+
+        if self.get_summary:
+            print("\nSummary duration processes:")
+
+            for i, info in enumerate(TimeManager.processes_info):
+                process = info[0]
+                duration = info[1]
+                exception_type = info[2]
+
+                if exception_type:
+                    print(
+                        f"{i + 1} {process}: {duration} (caught {exception_type.__name__} exception)"
+                    )
+                else:
+                    print(f"{i + 1} {process}: {duration}")

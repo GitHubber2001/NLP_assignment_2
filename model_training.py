@@ -3,7 +3,7 @@ import torch
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch import nn
 from torch.utils.data import DataLoader
-
+from models import LSTM
 
 def evaluate(model: nn.Module, data: DataLoader, device: str):
     """Returns an evaluation of the model based on the given data"""
@@ -70,7 +70,15 @@ def training(
 
         training_loss = total_loss / total_length
         training_loss_history.append(training_loss)
-        validation_accuracy = evaluate(model, validation_data, device)
+
+        if isinstance(model, LSTM):
+            # slow but fixes error "RuntimeError: cudnn RNN backward can only be called in training mode"
+            model.eval()
+            validation_accuracy = evaluate(model, validation_data, device)
+            model.train()
+        else:
+            validation_accuracy = evaluate(model, validation_data, device)
+
         validation_accuracy_history.append(validation_accuracy)
 
         if validation_accuracy - last_validation_accuracy < stopping_accuracy:

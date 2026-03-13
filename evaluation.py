@@ -23,5 +23,5 @@ def display_key_metrics(y_real, y_prediction, model_name: str) -> None:
         f"{model_name}: Accuracy classificaion score: {accuracy_classification_score}"
     )
 
-    plt.title(f"Confusion Matrix | {model_name} with TF-IDF")
-    plt.show()
+    plt.title(f"Confusion Matrix | {model_name}")
+    plt.show(block=False)

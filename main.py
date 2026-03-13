@@ -12,10 +12,10 @@ import torch
 from torch.utils.data import DataLoader
 
 import error_analysis
-import evaluation
 import model_training
 import models
 import preprocessing
+from evaluation import display_key_metrics
 from utilities.timer import TimeManager
 
 # fixed random seed
@@ -28,13 +28,20 @@ BATCH_SIZE = 64
 MAX_LENGTH = 100
 
 
-def main() -> None:
+def get_accelerator_device() -> str:
+    """Returns accelerator device for boosting performance"""
+
     current_accelerator = torch.accelerator.current_accelerator(True)
     if current_accelerator is not None:
         device = current_accelerator.type
     else:
         device = "cpu"
 
+    return device
+
+
+def main() -> None:
+    device = get_accelerator_device()
     print(f"Using {device} device")
 
     with TimeManager("Split"):
@@ -72,22 +79,48 @@ def main() -> None:
     plt.ylabel("Frequency")
     plt.show(block=False)
 
-    with TimeManager("Training"):
-        cnn_model = models.CNN(len(dictionary), 4).to(device)
+    vocab_size = len(dictionary)
+    amount_classes = 4
 
-        loss_history, accuracy_history = model_training.training(
+    with TimeManager("Training CNN"):
+        cnn_model = models.CNN(vocab_size, amount_classes).to(device)
+        cnn_loss_history, cnn_accuracy_history = model_training.training(
             cnn_model, train_dataloader, dev_dataloader, device
         )
 
-    # plot of loss history and accuracy history
+    with TimeManager("Training LSTM"):
+        lstm_model = models.LSTM(vocab_size, amount_classes).to(device)
+        lstm_loss_history, lstm_accuracy_history = model_training.training(
+            lstm_model, train_dataloader, dev_dataloader, device
+        )
+
+    # plot of CNN loss history and accuracy history
     plt.figure()
-    plt.plot(loss_history)
-    plt.plot(accuracy_history)
+    plt.title("CNN loss history")
+    plt.plot(cnn_loss_history)
+    plt.plot(cnn_accuracy_history)
     plt.show(block=False)
+
+    # plot of LSTM loss history and accuracy history
+    plt.figure()
+    plt.title("LSTM loss history")
+    plt.plot(lstm_loss_history)
+    plt.plot(lstm_accuracy_history)
+    plt.show(block=False)
+
+    with TimeManager("Predicitions"):
+        test_data = test_ds.data["text"].tolist()
+        test_real_y = test_ds.data["label"].tolist()
+
+        cnn_prediction = cnn_model.forward(test_data)
+        lstm_prediction = cnn_model.forward(test_data)
+
+        display_key_metrics(test_real_y, cnn_prediction, "CNN")
+        display_key_metrics(test_real_y, lstm_prediction, "LSTM")
 
 
 if __name__ == "__main__":
-    with TimeManager("Program"):
+    with TimeManager("Program", True):
         main()
 
     # to keep plots open

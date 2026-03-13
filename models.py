@@ -47,9 +47,7 @@ class CNN(nn.Module):
 
         # Convolution -> ReLU -> Max pooling over time
         conved = [F.relu(conv(embedded)) for conv in self.convs]
-        pooled = [
-            F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved
-        ]
+        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
 
         # Concatenate features from the different kernel sizes
         cat = self.dropout(
@@ -67,8 +65,8 @@ class LSTM(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_dim: int,
         num_classes: int,
+        embed_dim: int = 64,
         hidden_dim: int = 128,
         num_layers: int = 1,
         bidirectional: bool = True,
