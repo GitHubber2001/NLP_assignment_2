@@ -1,7 +1,7 @@
 """
 Kevin Kuipers (s5051150)
 Federico Berdugo Morales (s5363268)
-Nik Skouf (s5617804)
+Nikolaos Skoufis (s5617804)
 """
 
 import random
@@ -47,13 +47,8 @@ def main() -> None:
     with TimeManager("Split"):
         train_df, dev_df, test_df = preprocessing.preprocessing(RANDOM_SEED)
 
-        print(train_df[:20])
-
     with TimeManager("Dictionary"):
         dictionary = preprocessing.generate_vocab(train_df["text"], 2, 50000)
-
-        print(len(dictionary))
-        print(list(dictionary.items())[:20])
 
     with TimeManager("Data processing"):
         train_ds = preprocessing.TextData(train_df, dictionary, MAX_LENGTH)
@@ -64,10 +59,14 @@ def main() -> None:
             train_ds, BATCH_SIZE, True, collate_fn=train_ds.collate_fn
         )
         dev_dataloader = DataLoader(
-            dev_ds, BATCH_SIZE, True, collate_fn=dev_ds.collate_fn
+            dev_ds,
+            BATCH_SIZE,
+            collate_fn=dev_ds.collate_fn,  # Removed shuffle=True for eval sets
         )
         test_dataloader = DataLoader(
-            test_ds, BATCH_SIZE, True, collate_fn=test_ds.collate_fn
+            test_ds,
+            BATCH_SIZE,
+            collate_fn=test_ds.collate_fn,  # Removed shuffle=True for eval sets
         )
 
     # plot of distribution of lengths tokens
@@ -82,41 +81,108 @@ def main() -> None:
     vocab_size = len(dictionary)
     amount_classes = 4
 
-    with TimeManager("Training CNN"):
+    # 1. Train Baseline CNN
+    with TimeManager("Training CNN Baseline"):
         cnn_model = models.CNN(vocab_size, amount_classes).to(device)
         cnn_loss_history, cnn_accuracy_history = model_training.training(
             cnn_model, train_dataloader, dev_dataloader, device
         )
 
-    with TimeManager("Training LSTM"):
+    # 2. Train Baseline LSTM (Default Dropout = 0.5)
+    with TimeManager("Training LSTM Baseline"):
         lstm_model = models.LSTM(vocab_size, amount_classes).to(device)
         lstm_loss_history, lstm_accuracy_history = model_training.training(
             lstm_model, train_dataloader, dev_dataloader, device
         )
 
-    # plot of CNN loss history and accuracy history
+    # 3. Train Ablation LSTM (Dropout = 0.0)
+    with TimeManager("Training LSTM Ablation (No Dropout)"):
+        # We pass dropout=0.0 to test the effect of removing regularization
+        lstm_ablation_model = models.LSTM(vocab_size, amount_classes, dropout=0.0).to(
+            device
+        )
+        ablation_loss_history, ablation_accuracy_history = model_training.training(
+            lstm_ablation_model, train_dataloader, dev_dataloader, device
+        )
+
+    # Plot CNN Learning Curves
     plt.figure()
-    plt.title("CNN loss history")
-    plt.plot(cnn_loss_history)
-    plt.plot(cnn_accuracy_history)
+    plt.title("CNN Learning Curves")
+    plt.plot(cnn_loss_history, label="Train Loss")
+    plt.plot(cnn_accuracy_history, label="Dev Accuracy")
+    plt.legend()
     plt.show(block=False)
 
-    # plot of LSTM loss history and accuracy history
+    # Plot LSTM Baseline vs Ablation Learning Curves (Great for the report!)
     plt.figure()
-    plt.title("LSTM loss history")
-    plt.plot(lstm_loss_history)
-    plt.plot(lstm_accuracy_history)
+    plt.title("LSTM Regularization Ablation: Dropout 0.5 vs 0.0")
+    plt.plot(
+        lstm_loss_history,
+        label="Baseline Train Loss (Drop 0.5)",
+        linestyle="--",
+        color="blue",
+    )
+    plt.plot(
+        ablation_loss_history,
+        label="Ablation Train Loss (Drop 0.0)",
+        linestyle="-",
+        color="blue",
+    )
+    plt.plot(
+        lstm_accuracy_history,
+        label="Baseline Dev Acc (Drop 0.5)",
+        linestyle="--",
+        color="orange",
+    )
+    plt.plot(
+        ablation_accuracy_history,
+        label="Ablation Dev Acc (Drop 0.0)",
+        linestyle="-",
+        color="orange",
+    )
+    plt.legend()
     plt.show(block=False)
 
-    with TimeManager("Predicitions"):
-        test_data = test_ds.data["text"].tolist()
-        test_real_y = test_ds.data["label"].tolist()
+    # Final Evaluation & Predictions
+    with TimeManager("Predictions & Evaluation"):
+        # Helper function to get batched predictions
+        def get_test_predictions(model, dataloader):
+            model.eval()
+            all_preds = []
+            all_true = []
+            with torch.no_grad():
+                for batch in dataloader:
+                    x = batch.data.to(device)
+                    y = batch.labels.to(device)
+                    preds = model(x).argmax(1)
+                    all_preds.extend(preds.cpu().numpy())
+                    all_true.extend(y.cpu().numpy())
+            return all_true, all_preds
 
-        cnn_prediction = cnn_model.forward(test_data)
-        lstm_prediction = cnn_model.forward(test_data)
+        print("\n--- Evaluating CNN Baseline ---")
+        test_real_y, cnn_prediction = get_test_predictions(cnn_model, test_dataloader)
+        display_key_metrics(test_real_y, cnn_prediction, "CNN Baseline")
 
-        display_key_metrics(test_real_y, cnn_prediction, "CNN")
-        display_key_metrics(test_real_y, lstm_prediction, "LSTM")
+        print("\n--- Evaluating LSTM Baseline ---")
+        _, lstm_prediction = get_test_predictions(lstm_model, test_dataloader)
+        display_key_metrics(test_real_y, lstm_prediction, "LSTM Baseline")
+
+        print("\n--- Evaluating LSTM Ablation (No Dropout) ---")
+        _, ablation_prediction = get_test_predictions(
+            lstm_ablation_model, test_dataloader
+        )
+        display_key_metrics(test_real_y, ablation_prediction, "LSTM Ablation")
+
+        with TimeManager("Error Analysis Extraction"):
+            # Extract 10 errors from the best performing model (e.g., Baseline LSTM)
+            error_analysis.print_misclassified_examples(
+                model=lstm_model,
+                dataloader=test_dataloader,
+                dataset=test_ds,
+                device=device,
+                model_name="LSTM Baseline",
+                num_examples=10,
+            )
 
 
 if __name__ == "__main__":

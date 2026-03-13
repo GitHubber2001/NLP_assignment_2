@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, classification_report, f1_score
+from sklearn.metrics import accuracy_score
 from torch import nn
 from torch.utils.data import DataLoader
 from models import LSTM
@@ -9,7 +9,6 @@ def evaluate(model: nn.Module, data: DataLoader, device: str):
     """Returns an evaluation of the model based on the given data"""
 
     model.eval()
-    size = len(data.dataset)
 
     true = []
     predictions = []

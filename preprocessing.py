@@ -6,8 +6,7 @@ from dataclasses import dataclass
 import pandas as pd
 import torch
 from sklearn import model_selection
-from sklearn.feature_extraction.text import TfidfVectorizer
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 
 PADDING = "<padding>"
 UNKOWN = "<unkown>"
@@ -108,12 +107,14 @@ class TextData(Dataset):
             label_list.append(label)
             length_list.append(len(indices))
 
-        data = torch.full((len(batch), self.max_len), self.dictionary[PADDING])
+        data = torch.full(
+            (len(batch), self.max_len), self.dictionary[PADDING], dtype=torch.long
+        )
 
         for i, id in enumerate(id_list):
             data[i, : len(id)] = torch.tensor(id)
 
-        label_list = torch.tensor(label_list)
-        length_list = torch.tensor(length_list)
+        label_list = torch.tensor(label_list, dtype=torch.long)
+        length_list = torch.tensor(length_list, dtype=torch.long)
 
         return Batch(data, label_list, length_list)
